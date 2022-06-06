@@ -1,42 +1,79 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
-<CodeBlocks_project_file>
-	<FileVersion major="1" minor="6" />
-	<Project>
-		<Option title="Space_Invaders" />
-		<Option pch_mode="2" />
-		<Option compiler="gcc" />
-		<Build>
-			<Target title="Debug">
-				<Option output="bin/Debug/Space_Invaders" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
-				<Option type="1" />
-				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-g" />
-				</Compiler>
-			</Target>
-			<Target title="Release">
-				<Option output="bin/Release/Space_Invaders" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Release/" />
-				<Option type="1" />
-				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-O2" />
-				</Compiler>
-				<Linker>
-					<Add option="-s" />
-				</Linker>
-			</Target>
-		</Build>
-		<Compiler>
-			<Add option="-Wall" />
-			<Add option="-fexceptions" />
-		</Compiler>
-		<Unit filename="main.cpp" />
-		<Unit filename="portada.cpp" />
-		<Unit filename="portada.h" />
-		<Extensions>
-			<lib_finder disable_auto="1" />
-		</Extensions>
-	</Project>
-</CodeBlocks_project_file>
+#include <iostream>
+#include <allegro.h>
+#include "portada.h"
+#include "Enemigo.h"
+#include "Escudos.h"
+#include "Bala.h"
+#include "Nave.h"
+
+using namespace std;
+
+const int MAX_DIM_ENEMIGOS = 60;
+const int NUM_ENEMIGOS = 55;
+const int MAX_BALAS = 8;
+const int NIVEL_MAXIMO = 8;
+
+
+int main()
+{
+    allegro_init();
+    install_keyboard();
+    set_color_depth(32);
+    set_gfx_mode(GFX_AUTODETECT_WINDOWED,600,650,0,0);
+
+    int inicia_audio(int izquierda, int derecha);
+    int inicia_audio(int izquierda, int derecha){
+    if (install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, NULL) != 0) {
+       allegro_message("Error: inicializando sistema de sonido\n%s\n", allegro_error);
+       return 1;
+    }
+
+	set_volume(izquierda, derecha);
+};
+
+
+    BITMAP *buffer = create_bitmap(600,650);
+    BITMAP *nave = load_bitmap("Recursos/nave1.bmp",NULL);
+    BITMAP *enemigo = load_bitmap("Recursos/enemigos.bmp",NULL);
+    BITMAP *bala = load_bitmap("Recursos/Bala2.bmp", NULL);
+    BITMAP *fondo = load_bitmap("Recursos/fondo1.bmp", NULL);
+    BITMAP *portada = load_bitmap("Recursos/portada.bmp",NULL);
+    SAMPLE *musica_portada = load_sample("Recursos/MainTitle.wav");
+    SAMPLE *start_pressed = load_sample("Recursos/soundEffects_StartPressed.wav");
+    SAMPLE *musica_victoria = load_sample("Recursos/soundEffects_StageCleared.wav");
+    SAMPLE *musica_derrota = load_sample("Recursos/soundEffects_GameOver.wav");
+
+
+    play_sample(musica_portada, 255, 127, 1000, 1);
+    PORTADA(portada,musica_portada,start_pressed);
+
+    NAVE n;
+    n.construirNave("Recursos/nave.bmp","Recursos/Bala2.bmp",6,12,30,20,290.500,-8);
+
+    Enemigo e[MAX_DIM_ENEMIGOS];
+    e.construirNave("Recursos/enemigos.bmp","Recursos/Bala_enem.bmp",6,12,25,20,50,80,8 );
+    Bala disparos [n.max_disp];
+    Bala disparos [MAX_BALAS];
+    Bala disparosEnem[MAX_BALAS];
+
+    e.insertarEnemigos(e,nivel)
+    while(!key[KEY_ESC]){
+
+            clear_to_color(buffer, 0x000000);
+            n.pintar(buffer);
+            n.mover();
+            n.disparar(disparos, buffer);
+
+            e.pintar(buffer);
+            e.disparar(disparos, buffer);
+            blit(fondo,buffer,0,0,0,0,600,725);
+            blit(buffer,screen,0,0,0,0,600,650);
+
+    }
+
+
+
+    return 0;
+
+END_OF_MAIN();
+}
