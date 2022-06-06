@@ -1,79 +1,112 @@
-#include <iostream>
 #include <allegro.h>
-#include "portada.h"
-#include "Enemigo.h"
-#include "Escudos.h"
-#include "Bala.h"
-#include "Nave.h"
+#include "inicia.h"
+#include "disparos.h"
 
-using namespace std;
-
-const int MAX_DIM_ENEMIGOS = 60;
-const int NUM_ENEMIGOS = 55;
-const int MAX_BALAS = 8;
-const int NIVEL_MAXIMO = 8;
+#define ANCHO 600
+#define ALTO  375
 
 
-int main()
-{
-    allegro_init();
-    install_keyboard();
-    set_color_depth(32);
-    set_gfx_mode(GFX_AUTODETECT_WINDOWED,600,650,0,0);
+struct NAVE{
+    int x,y;
+    int n_disp;
+    int max_disp;
+    int tick;
+    int ancho_b;
+    int alto_b;
+    int ancho_p;
+    int alto_p;
+    int dir_bala;
 
-    int inicia_audio(int izquierda, int derecha);
-    int inicia_audio(int izquierda, int derecha){
-    if (install_sound(DIGI_AUTODETECT, MIDI_AUTODETECT, NULL) != 0) {
-       allegro_message("Error: inicializando sistema de sonido\n%s\n", allegro_error);
-       return 1;
-    }
+    BITMAP* img_nav;
+    BITMAP* img_bala;
 
-	set_volume(izquierda, derecha);
+    void inicia(char* ruta_nave, char* ruta_bala, int _ancho_b, int _alto_b,
+                int _ancho_p, int _alto_p, int _x, int _y, int _dir_bala);
+    void pinta(BITMAP* buffer);
+    void mueve();
+    bool temporizador();
+    void dispara(struct Balas disparos[], BITMAP* buffer);
 };
 
+void NAVE::inicia(char* ruta_nave, char* ruta_bala, int _ancho_b, int _alto_b,
+                  int _ancho_p, int _alto_p, int _x, int _y, int _dir_bala){
+    x = _x; y = _y;
+    n_disp = 0; max_disp = 5;
+    img_nav = load_bitmap(ruta_nave,NULL);
+    img_bala = load_bitmap(ruta_bala,NULL);
+    tick = 0;
+    ancho_b = _ancho_b;
+    alto_b = _alto_b;
+    alto_p = _alto_p;
+    ancho_p = _ancho_p;
+    dir_bala = _dir_bala;
+}
 
-    BITMAP *buffer = create_bitmap(600,650);
-    BITMAP *nave = load_bitmap("Recursos/nave1.bmp",NULL);
-    BITMAP *enemigo = load_bitmap("Recursos/enemigos.bmp",NULL);
-    BITMAP *bala = load_bitmap("Recursos/Bala2.bmp", NULL);
-    BITMAP *fondo = load_bitmap("Recursos/fondo1.bmp", NULL);
-    BITMAP *portada = load_bitmap("Recursos/portada.bmp",NULL);
-    SAMPLE *musica_portada = load_sample("Recursos/MainTitle.wav");
-    SAMPLE *start_pressed = load_sample("Recursos/soundEffects_StartPressed.wav");
-    SAMPLE *musica_victoria = load_sample("Recursos/soundEffects_StageCleared.wav");
-    SAMPLE *musica_derrota = load_sample("Recursos/soundEffects_GameOver.wav");
+bool NAVE::temporizador(){
+    tick++;
+    if (tick == 5){
+        tick = 0;
+        return true;
+    }
+    return false;
 
+}
 
-    play_sample(musica_portada, 255, 127, 1000, 1);
-    PORTADA(portada,musica_portada,start_pressed);
+void NAVE::pinta(BITMAP* buffer){
+    masked_blit(img_nav,buffer,0,0,x,y,ancho_p,alto_p);
 
-    NAVE n;
-    n.construirNave("Recursos/nave.bmp","Recursos/Bala2.bmp",6,12,30,20,290.500,-8);
+}
 
-    Enemigo e[MAX_DIM_ENEMIGOS];
-    e.construirNave("Recursos/enemigos.bmp","Recursos/Bala_enem.bmp",6,12,25,20,50,80,8 );
-    Bala disparos [n.max_disp];
-    Bala disparos [MAX_BALAS];
-    Bala disparosEnem[MAX_BALAS];
+void NAVE::mueve(){
+    if (key[KEY_LEFT]) x -=5;
+    if (key[KEY_RIGHT]) x +=5;
 
-    e.insertarEnemigos(e,nivel)
+}
+
+void NAVE::dispara(struct Balas disparos[], BITMAP* buffer){
+        if(key[KEY_SPACE] && temporizador())
+        crear_bala(n_disp, max_disp, disparos, x, y,dir_bala);
+        pintar_bala(n_disp, max_disp, disparos, buffer, img_bala, ancho_b, alto_b);
+        elimina_bala(n_disp, max_disp, disparos, ANCHO, ALTO);
+
+}
+
+void 
+
+int main(){
+
+    inicia_allegro(ANCHO,ALTO);
+	inicia_audio(70,70);
+
+    BITMAP *buffer = create_bitmap(ANCHO, ALTO);
+
+    NAVE N;
+    N.inicia("Recursos/nave.bmp","Recursos/Bala2.bmp",6,12,30,20, ANCHO/2, ALTO-50, -8);
+
+    NAVE E[60];
+    E.inicia("Recursos/enemigos.bmp", "Recursos/Bala_Enem.bmp", 6, 12, 25, 20, 50, 80, 8);
+    Balas disparos[N.max_disp];
+    Balas disp_E[E.max_disp];
+
     while(!key[KEY_ESC]){
 
-            clear_to_color(buffer, 0x000000);
-            n.pintar(buffer);
-            n.mover();
-            n.disparar(disparos, buffer);
+        clear_to_color (buffer,0x000000);
+        N.pinta(buffer);
+        N.mueve();
+        N.dispara(disparos, buffer);
 
-            e.pintar(buffer);
-            e.disparar(disparos, buffer);
-            blit(fondo,buffer,0,0,0,0,600,725);
-            blit(buffer,screen,0,0,0,0,600,650);
+        E.pinta(buffer);
+        E.dispara(disp_E, buffer);
+
+        blit(buffer, screen ,0,0,0,0,ANCHO,ALTO);
+        rest(20);
 
     }
 
 
 
-    return 0;
 
-END_OF_MAIN();
+	return 0;
 }
+END_OF_MAIN();
+
