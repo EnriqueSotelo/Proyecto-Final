@@ -1,110 +1,62 @@
 #include <allegro.h>
+#include <time.h>
+#include <stdlib.h>
 #include "inicia.h"
+#include "portada.h"
+#include "personajes.h"
 #include "disparos.h"
 
+
 #define ANCHO 600
-#define ALTO  375
-
-
-struct NAVE{
-    int x,y;
-    int n_disp;
-    int max_disp;
-    int tick;
-    int ancho_b;
-    int alto_b;
-    int ancho_p;
-    int alto_p;
-    int dir_bala;
-
-    BITMAP* img_nav;
-    BITMAP* img_bala;
-
-    void inicia(char* ruta_nave, char* ruta_bala, int _ancho_b, int _alto_b,
-                int _ancho_p, int _alto_p, int _x, int _y, int _dir_bala);
-    void pinta(BITMAP* buffer);
-    void mueve();
-    bool temporizador();
-    void dispara(struct Balas disparos[], BITMAP* buffer);
-};
-
-void NAVE::inicia(char* ruta_nave, char* ruta_bala, int _ancho_b, int _alto_b,
-                  int _ancho_p, int _alto_p, int _x, int _y, int _dir_bala){
-    x = _x; y = _y;
-    n_disp = 0; max_disp = 5;
-    img_nav = load_bitmap(ruta_nave,NULL);
-    img_bala = load_bitmap(ruta_bala,NULL);
-    tick = 0;
-    ancho_b = _ancho_b;
-    alto_b = _alto_b;
-    alto_p = _alto_p;
-    ancho_p = _ancho_p;
-    dir_bala = _dir_bala;
-}
-
-bool NAVE::temporizador(){
-    tick++;
-    if (tick == 5){
-        tick = 0;
-        return true;
-    }
-    return false;
-
-}
-
-void NAVE::pinta(BITMAP* buffer){
-    masked_blit(img_nav,buffer,0,0,x,y,ancho_p,alto_p);
-
-}
-
-void NAVE::mueve(){
-    if (key[KEY_LEFT]) x -=5;
-    if (key[KEY_RIGHT]) x +=5;
-
-}
-
-void NAVE::dispara(struct Balas disparos[], BITMAP* buffer){
-        if(key[KEY_SPACE] && temporizador())
-        crear_bala(n_disp, max_disp, disparos, x, y,dir_bala);
-        pintar_bala(n_disp, max_disp, disparos, buffer, img_bala, ancho_b, alto_b);
-        elimina_bala(n_disp, max_disp, disparos, ANCHO, ALTO);
-
-}
-
-void 
+#define ALTO  600
 
 int main(){
+
+    srand(time(NULL));
 
     inicia_allegro(ANCHO,ALTO);
 	inicia_audio(70,70);
 
     BITMAP *buffer = create_bitmap(ANCHO, ALTO);
+    BITMAP *portada = load_bitmap("Recursos/portada.bmp",NULL);
+    BITMAP *fondo = load_bitmap("Recursos/fondo",NULL);
+
+    PORTADA(portada);
 
     NAVE N;
-    N.inicia("Recursos/nave.bmp","Recursos/Bala2.bmp",6,12,30,20, ANCHO/2, ALTO-50, -8);
+    N.inicia("Recursos/nave.bmp","Recursos/Bala2.bmp",6,12,30,20, ANCHO/2, ALTO-70, -8,0,3);
 
     NAVE E[60];
-    E.inicia("Recursos/enemigos.bmp", "Recursos/Bala_Enem.bmp", 6, 12, 25, 20, 50, 80, 8);
+    acomoda_enemigos(E);
     Balas disparos[N.max_disp];
-    Balas disp_E[E.max_disp];
+    Balas disp_E[E[0].max_disp];
+
+    int azar = rand()%55;
+    int mov = 0;
 
     while(!key[KEY_ESC]){
 
         clear_to_color (buffer,0x000000);
-        N.pinta(buffer);
+        N.pinta(buffer,0,0);
         N.mueve();
+        if(key[KEY_SPACE] && N.temporizador(5))
+        crear_bala(N.n_disp, N.max_disp, disparos, N.x, N.y, N.dir_bala);
         N.dispara(disparos, buffer);
 
-        E.pinta(buffer);
-        E.dispara(disp_E, buffer);
+        for(int i = 0; i < 55; i++)
+        elimina_bala_objeto(N, E[i],disparos);
 
+        pintar_enemigo(E,buffer,mov);
+        if(E[azar].n_disp == 0) azar = rand()%55;
+        E[azar].dispara(disp_E, buffer);
+        if(E[0].temporizador(15))
+        if(++mov == 2)mov = 0;
+
+        imprimir_fondo(fondo, buffer);
         blit(buffer, screen ,0,0,0,0,ANCHO,ALTO);
         rest(20);
 
     }
-
-
-
 
 	return 0;
 }
